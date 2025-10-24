@@ -126,8 +126,8 @@ export default function FacebookLogin() {
               <a href="#">Português (Brasil)</a>
               <a href="#">Italiano</a>
               <a href="#">Deutsch</a>
-              <a href="#">Arabic</a>
-              <a href="#">Hindi</a>
+              <a href="#">العربية</a>
+              <a href="#">हिन्दी</a>
               <a href="#">中文(简体)</a>
               <a href="#">日本語</a>
             </div>
@@ -182,13 +182,15 @@ export default function FacebookLogin() {
           background: #ffffff;
           border-radius: 8px;
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1);
-          padding: 20px;
+          padding: 16px;
           margin-bottom: 28px;
+          width: 100%;
+          box-sizing: border-box;
         }
         
         .login-header {
           text-align: center;
-          margin-bottom: 20px;
+          margin-bottom: 16px;
         }
         
         .login-header h2 {
@@ -203,10 +205,12 @@ export default function FacebookLogin() {
           display: flex;
           flex-direction: column;
           gap: 12px;
+          width: 100%;
         }
         
         .input-container {
           margin-bottom: 12px;
+          width: 100%;
         }
         
         .facebook-input {
@@ -219,6 +223,7 @@ export default function FacebookLogin() {
           box-sizing: border-box;
           min-height: 44px;
           color: #1c1e21;
+          display: block;
         }
         
         .facebook-input:focus {
@@ -243,6 +248,7 @@ export default function FacebookLogin() {
           cursor: pointer;
           min-height: 48px;
           margin-bottom: 16px;
+          display: block;
         }
         
         .login-button:hover {
@@ -252,10 +258,12 @@ export default function FacebookLogin() {
         .separator {
           border-bottom: 1px solid #dadde1;
           margin: 20px 0;
+          width: 100%;
         }
         
         .secondary-actions {
           text-align: center;
+          width: 100%;
         }
         
         .forgot-password {
@@ -295,37 +303,44 @@ export default function FacebookLogin() {
           align-items: flex-start;
           gap: 8px;
           margin-bottom: 16px;
+          width: 100%;
+          box-sizing: border-box;
         }
         
         .error-icon {
           color: #dd3c10;
           font-weight: bold;
           font-size: 16px;
+          flex-shrink: 0;
         }
         
         .error-text {
           color: #dd3c10;
           font-size: 14px;
           line-height: 1.4;
+          flex: 1;
         }
         
         .language-footer {
           text-align: center;
           margin-top: 28px;
+          width: 100%;
         }
         
         .languages {
           display: flex;
           flex-wrap: wrap;
           justify-content: center;
-          gap: 10px;
-          margin-bottom: 20px;
+          gap: 8px;
+          margin-bottom: 16px;
           font-size: 12px;
+          max-width: 100%;
         }
         
         .languages a {
           color: #8a8d91;
           text-decoration: none;
+          white-space: nowrap;
         }
         
         .languages a:hover {
@@ -357,10 +372,12 @@ export default function FacebookLogin() {
             box-shadow: none;
             border: 1px solid #dddfe2;
             padding: 16px;
+            margin: 0 auto;
+            max-width: 400px;
           }
           
           .languages {
-            gap: 8px;
+            gap: 6px;
           }
           
           .languages a {
@@ -368,14 +385,23 @@ export default function FacebookLogin() {
           }
         }
         
-        @media (max-width: 360px) {
+        @media (max-width: 480px) {
           .login-box {
             padding: 12px;
+            margin: 0 8px;
           }
           
           .facebook-input {
             padding: 12px 14px;
             font-size: 16px;
+          }
+          
+          .languages {
+            gap: 4px;
+          }
+          
+          .languages a {
+            font-size: 10px;
           }
         }
       `}</style>
