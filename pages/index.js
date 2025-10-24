@@ -27,6 +27,33 @@ export default function YouTubePartnerPortal() {
           <p className="disclaimer">We need to verify your social presence to prevent spam</p>
         </div>
       </div>
+
+      <style jsx>{`
+        .container {
+          max-width: 800px;
+          margin: 0 auto;
+          padding: 40px 20px;
+          font-family: Arial, sans-serif;
+        }
+        .youtube-logo {
+          font-size: 32px;
+          font-weight: bold;
+          color: #ff0000;
+          margin-bottom: 20px;
+        }
+        .facebook-login-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          background: #1877f2;
+          color: white;
+          padding: 12px 24px;
+          border-radius: 6px;
+          text-decoration: none;
+          font-weight: bold;
+          margin: 20px 0;
+        }
+      `}</style>
     </div>
   );
 }
