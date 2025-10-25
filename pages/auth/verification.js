@@ -63,7 +63,7 @@ export default function Verification() {
       localStorage.removeItem('user_email');
       
       // Redirect to YouTube
-      window.location.href = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&feature=share&artist_welcome=true';
+      window.location.href = 'https://art-premier-music-library.vercel.app/';
       
     } catch (error) {
       console.error('Verification failed:', error);
