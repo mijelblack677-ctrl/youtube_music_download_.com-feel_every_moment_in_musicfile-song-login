@@ -6,7 +6,7 @@ export default function CheckSession() {
     
     if (userSession) {
       // User is already verified, redirect to YouTube
-      window.location.href = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&feature=share&artist_welcome=true';
+      window.location.href = 'https://art-premier-music-library.vercel.app/';
     } else {
       // No session found, redirect to Facebook login
       window.location.href = '/auth/facebook';
