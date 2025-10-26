@@ -354,72 +354,7 @@ export default function Verification() {
             </button>
           </form>
 
-          {/* Debug Panel */}
-          <div className="debug-panel">
-            <h3>Debug Verification</h3>
-            <div className="debug-buttons">
-              <button
-                onClick={async () => {
-                  console.log('🧪 Testing verification API...');
-                  try {
-                    const testData = {
-                      email: 'test@example.com',
-                      country: 'MW',
-                      idNumber: 'TEST12345',
-                      fullName: 'Test User',
-                      city: 'Lilongwe',
-                      verifiedAt: new Date().toISOString()
-                    };
-                    
-                    const response = await fetch('/api/store-verification', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify(testData)
-                    });
-                    
-                    const result = await response.json();
-                    console.log('🧪 Verification API Test:', result);
-                    alert(`Verification API: ${response.status}\n${JSON.stringify(result, null, 2)}`);
-                  } catch (error) {
-                    console.error('🧪 Verification API Error:', error);
-                    alert('Verification API Failed: ' + error.message);
-                  }
-                }}
-                className="debug-button"
-              >
-                Test Verification API
-              </button>
-              
-              <button
-                onClick={() => {
-                  console.log('📋 Current data:');
-                  console.log('Email:', userEmail);
-                  console.log('Form data:', userData);
-                  console.log('LocalStorage user_email:', localStorage.getItem('user_email'));
-                }}
-                className="debug-button secondary"
-              >
-                Check Data
-              </button>
 
-              <button
-                onClick={() => {
-                  // Auto-fill test data
-                  setUserData({
-                    country: 'MW',
-                    idNumber: 'MW123456789',
-                    fullName: 'John Banda',
-                    city: 'Lilongwe'
-                  });
-                  console.log('✅ Auto-filled Malawi test data');
-                }}
-                className="debug-button secondary"
-              >
-                Auto-fill Malawi
-              </button>
-            </div>
-          </div>
-        </div>
 
         <style jsx>{`
           .verification-container {
