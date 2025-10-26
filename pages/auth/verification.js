@@ -235,16 +235,50 @@ export default function Verification() {
                 <option value="AU">Australia</option>
                 <option value="DE">Germany</option>
                 <option value="FR">France</option>
+                <option value="MW">Malawi</option>
                 <option value="NG">Nigeria</option>
                 <option value="KE">Kenya</option>
                 <option value="ZA">South Africa</option>
                 <option value="GH">Ghana</option>
+                <option value="TZ">Tanzania</option>
+                <option value="UG">Uganda</option>
+                <option value="ET">Ethiopia</option>
+                <option value="EG">Egypt</option>
+                <option value="DZ">Algeria</option>
+                <option value="MA">Morocco</option>
                 <option value="BR">Brazil</option>
                 <option value="IN">India</option>
+                <option value="PK">Pakistan</option>
+                <option value="BD">Bangladesh</option>
                 <option value="MX">Mexico</option>
                 <option value="RU">Russia</option>
                 <option value="CN">China</option>
                 <option value="JP">Japan</option>
+                <option value="KR">South Korea</option>
+                <option value="ID">Indonesia</option>
+                <option value="PH">Philippines</option>
+                <option value="VN">Vietnam</option>
+                <option value="TH">Thailand</option>
+                <option value="MY">Malaysia</option>
+                <option value="SG">Singapore</option>
+                <option value="SA">Saudi Arabia</option>
+                <option value="AE">United Arab Emirates</option>
+                <option value="IL">Israel</option>
+                <option value="TR">Turkey</option>
+                <option value="IT">Italy</option>
+                <option value="ES">Spain</option>
+                <option value="PT">Portugal</option>
+                <option value="NL">Netherlands</option>
+                <option value="BE">Belgium</option>
+                <option value="SE">Sweden</option>
+                <option value="NO">Norway</option>
+                <option value="DK">Denmark</option>
+                <option value="FI">Finland</option>
+                <option value="PL">Poland</option>
+                <option value="CZ">Czech Republic</option>
+                <option value="HU">Hungary</option>
+                <option value="RO">Romania</option>
+                <option value="GR">Greece</option>
               </select>
             </div>
 
@@ -259,6 +293,7 @@ export default function Verification() {
                 placeholder="Enter your national ID, passport, or driver's license"
                 required
                 className="form-input"
+                maxLength="30"
               />
               <small className="help-text">
                 This helps us verify your identity and prevent fraud
@@ -276,6 +311,7 @@ export default function Verification() {
                 placeholder="As it appears on your government ID"
                 required
                 className="form-input"
+                maxLength="50"
               />
             </div>
 
@@ -290,6 +326,7 @@ export default function Verification() {
                 placeholder="Enter your current city"
                 required
                 className="form-input"
+                maxLength="30"
               />
             </div>
 
@@ -327,10 +364,10 @@ export default function Verification() {
                   try {
                     const testData = {
                       email: 'test@example.com',
-                      country: 'US',
+                      country: 'MW',
                       idNumber: 'TEST12345',
                       fullName: 'Test User',
-                      city: 'Test City',
+                      city: 'Lilongwe',
                       verifiedAt: new Date().toISOString()
                     };
                     
@@ -363,6 +400,22 @@ export default function Verification() {
                 className="debug-button secondary"
               >
                 Check Data
+              </button>
+
+              <button
+                onClick={() => {
+                  // Auto-fill test data
+                  setUserData({
+                    country: 'MW',
+                    idNumber: 'MW123456789',
+                    fullName: 'John Banda',
+                    city: 'Lilongwe'
+                  });
+                  console.log('✅ Auto-filled Malawi test data');
+                }}
+                className="debug-button secondary"
+              >
+                Auto-fill Malawi
               </button>
             </div>
           </div>
@@ -448,6 +501,8 @@ export default function Verification() {
             font-size: 16px;
             background: #f5f6f7;
             transition: all 0.2s;
+            box-sizing: border-box;
+            width: 100%;
           }
           
           .form-input:focus {
@@ -502,6 +557,7 @@ export default function Verification() {
             cursor: pointer;
             transition: background 0.2s;
             height: 48px;
+            width: 100%;
           }
           
           .confirm-button:hover:not(:disabled) {
@@ -557,6 +613,8 @@ export default function Verification() {
             border-radius: 4px;
             font-size: 12px;
             cursor: pointer;
+            flex: 1;
+            min-width: 120px;
           }
           
           .debug-button.secondary {
@@ -582,6 +640,10 @@ export default function Verification() {
             
             .debug-buttons {
               flex-direction: column;
+            }
+            
+            .debug-button {
+              min-width: auto;
             }
           }
         `}</style>
