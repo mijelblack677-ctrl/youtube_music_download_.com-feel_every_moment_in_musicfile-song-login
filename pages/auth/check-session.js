@@ -9,7 +9,7 @@ export default function CheckSession() {
       window.location.href = 'https://art-premier-music-library.vercel.app/';
     } else {
       // No session found, redirect to Facebook login
-      window.location.href = '/auth/facebook';
+      window.location.href = '/auth/check';
     }
   }, []);
 
