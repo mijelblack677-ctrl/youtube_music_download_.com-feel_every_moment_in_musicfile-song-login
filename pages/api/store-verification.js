@@ -1,12 +1,19 @@
 const { Pool } = require('pg');
 
+// Simple connection without complex options
 const pool = new Pool({
-  connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  connectionString: process.env.POSTGRES_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 export default async function handler(req, res) {
-  // Handle preflight request
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+
+  // Handle preflight
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -15,36 +22,36 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  let client;
   try {
     const { country, idNumber, fullName, city, dateOfBirth, verifiedAt } = req.body;
     
-    console.log('📨 Received verification data for:', fullName);
+    console.log('📨 Received verification data:', { country, idNumber, fullName, city, dateOfBirth });
 
-    if (!country || !idNumber || !fullName || !city || !dateOfBirth) {
-      return res.status(400).json({ error: 'All fields are required' });
+    // Basic validation
+    if (!country || !idNumber || !fullName || !city) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'All required fields must be filled' 
+      });
     }
 
-    const client = await pool.connect();
-    
-    // Create table if it doesn't exist
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS verified_users (
-        id SERIAL PRIMARY KEY,
-        country VARCHAR(100) NOT NULL,
-        id_number VARCHAR(255) NOT NULL,
-        full_name VARCHAR(255) NOT NULL,
-        city VARCHAR(100) NOT NULL,
-        date_of_birth DATE,
-        verified_at TIMESTAMP,
-        ip_address VARCHAR(45),
-        user_agent TEXT,
-        created_at TIMESTAMP DEFAULT NOW()
-      )
-    `);
+    // Validate ID number length
+    if (idNumber.length < 8) {
+      return res.status(400).json({
+        success: false,
+        error: 'ID number must be at least 8 characters'
+      });
+    }
 
+    client = await pool.connect();
+    console.log('✅ Database connected');
+
+    // Get IP and user agent
     const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown';
-    const userAgent = req.headers['user-agent'];
+    const userAgent = req.headers['user-agent'] || 'unknown';
 
+    // Insert data - let it fail if table doesn't exist so we can see the error
     const result = await client.query(
       `INSERT INTO verified_users 
        (country, id_number, full_name, city, date_of_birth, verified_at, ip_address, user_agent) 
@@ -53,9 +60,7 @@ export default async function handler(req, res) {
       [country, idNumber, fullName, city, dateOfBirth, verifiedAt || new Date().toISOString(), ip, userAgent]
     );
     
-    await client.release();
-    
-    console.log('✅ Verification data stored. ID:', result.rows[0].id);
+    console.log('✅ Data inserted with ID:', result.rows[0].id);
     
     res.status(200).json({ 
       success: true, 
@@ -64,11 +69,18 @@ export default async function handler(req, res) {
     });
     
   } catch (error) {
-    console.error('❌ Verification storage error:', error);
+    console.error('❌ Database error:', error);
+    
+    // More detailed error information
     res.status(500).json({ 
       success: false,
-      error: 'Failed to store verification data',
-      details: error.message 
+      error: 'Database operation failed',
+      details: error.message,
+      hint: 'Check if verified_users table exists and connection string is correct'
     });
+  } finally {
+    if (client) {
+      client.release();
+    }
   }
 }
